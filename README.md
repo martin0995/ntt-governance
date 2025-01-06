@@ -1,66 +1,150 @@
-## Foundry
+# Governance Voting with NTT
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+## Introduction
 
-Foundry consists of:
+This repository provides a framework for decentralized governance voting using a staking mechanism. It utilizes an ERC20 token deployed across multiple chains and integrates Wormhole's NTT (Native Token Transfers) for cross-chain functionality. The governance contract manages proposals and voting, while the staking contract handles token locking and vote recording.
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+This guide outlines the steps for deploying the contracts, testing the voting process, and interacting with the deployed contracts on the Sepolia testnet.
 
-## Documentation
+## Prerequisites
+Before proceeding, ensure you have the following:
 
-https://book.getfoundry.sh/
+ - Forge installed
+ - An ERC20 token deployed on the respective chains
+ - NTT (Native Token Transfers) deployed for those ERC20 tokens using the Wormhole Protocol
+ - Funded wallets with testnet ETH for gas fees
+ - `.env` file containing
 
-## Usage
+## Contract Deployment
 
-### Build
+1. Deploy Governance Contract
 
-```shell
-$ forge build
+Deploy the governance contract using the following command:
+
+```bash
+forge script script/DeployGovernanceVoting.s.sol \
+    --rpc-url https://ethereum-sepolia-rpc.publicnode.com \
+    --private-key <PRIVATE_KEY> \
+    --broadcast
 ```
 
-### Test
+Post-deployment:
 
-```shell
-$ forge test
+ - Add the governance contract address to the `.env` file as GOVERNANCE_ADDRESS
+ - Add the token contract address (ERC20) to the `.env` file as STAKING_TOKEN_ADDRESS
+
+2. Deploy Staking Contract
+
+Deploy the staking contract using the following command:
+
+```bash
+forge script script/DeployStakingContract.s.sol \
+    --rpc-url https://ethereum-sepolia-rpc.publicnode.com \
+    --private-key <PRIVATE_KEY> \
+    --broadcast
 ```
 
-### Format
+Post-deployment:
 
-```shell
-$ forge fmt
+ - Add the staking contract address to the .env file as STAKING_CONTRACT_ADDRESS
+
+3. Update Governance Contract with Staking Address
+
+Link the staking contract to the governance contract:
+
+```bash
+forge script script/UpdateGovernanceWithStaking.s.sol \
+    --rpc-url https://ethereum-sepolia-rpc.publicnode.com \
+    --private-key <PRIVATE_KEY> \
+    --broadcast
 ```
 
-### Gas Snapshots
+## Testing
 
-```shell
-$ forge snapshot
+### Create a Proposal
+
+Create a new proposal with a 5-minute expiry:
+
+```bash
+cast send $GOVERNANCE_ADDRESS \
+    "addProposal(uint256,string,uint256)" \
+    1 "Proposal to test voting" $(($(date +%s) + 300)) \
+    --rpc-url https://ethereum-sepolia-rpc.publicnode.com \
+    --private-key <PRIVATE_KEY>
 ```
 
-### Anvil
+### Set Allowance
 
-```shell
-$ anvil
+Ensure the staking contract has permission to transfer tokens on behalf of the voter:
+
+1. Check the current allowance:
+
+```bash
+cast call $STAKING_TOKEN_ADDRESS \
+    "allowance(address,address)(uint256)" \
+    <VOTER_ADDRESS> $STAKING_CONTRACT_ADDRESS \
+    --rpc-url https://ethereum-sepolia-rpc.publicnode.com
 ```
 
-### Deploy
+2. If the result is 0, set the allowance:
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
+```bash
+cast send $STAKING_TOKEN_ADDRESS \
+    "approve(address,uint256)" \
+    $STAKING_CONTRACT_ADDRESS 10000 \
+    --rpc-url https://ethereum-sepolia-rpc.publicnode.com \
+    --private-key <VOTER_PRIVATE_KEY>
 ```
 
-### Cast
+### Vote on the Proposal
 
-```shell
-$ cast <subcommand>
+Cast your vote (e.g., voting "Yes" with 1 token):
+
+```bash
+cast send $STAKING_CONTRACT_ADDRESS \
+    "vote(uint256,bool,uint256)" \
+    1 true 1000000000000000000 \
+    --rpc-url https://ethereum-sepolia-rpc.publicnode.com \
+    --private-key <PRIVATE_KEY>
 ```
 
-### Help
+### Verify Proposal Details
 
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
+Check the details of a specific proposal:
+
+```bash
+cast call $GOVERNANCE_ADDRESS \
+    "getProposalDetails(uint256)" 1 \
+    --rpc-url https://ethereum-sepolia-rpc.publicnode.com
 ```
+
+Decode the details:
+
+```bash
+cast --abi-decode "getProposalDetails()(string,uint256,uint256,uint256)" <ENCODED_DETAILS>
+```
+
+Retrieve all proposal IDs:
+
+```bash
+cast call $GOVERNANCE_ADDRESS \
+    "getProposals()(uint256[])" \
+    --rpc-url https://ethereum-sepolia-rpc.publicnode.com
+```
+
+### Withdraw Locked Tokens
+
+Withdraw tokens locked during voting once the proposal expires:
+
+```bash
+cast send $STAKING_CONTRACT_ADDRESS \
+    "withdrawTokens(uint256)" \
+    1 \
+    --rpc-url https://ethereum-sepolia-rpc.publicnode.com \
+    --private-key <PRIVATE_KEY>
+```
+
+## Additional Notes
+
+ - This guide is tailored for the Sepolia Testnet. Adjust RPC URLs and environment variables if deploying on another network
+ - Ensure the ERC20 token supports cross-chain transfers via Wormhole's NTT technology

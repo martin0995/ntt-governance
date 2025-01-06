@@ -18,8 +18,22 @@ contract DeployStakingContract is Script {
 
         // Deploy StakingContract
         StakingContract stakingContract = new StakingContract(stakingTokenAddress, governanceVotingAddress);
-
         console2.log("StakingContract deployed at:", address(stakingContract));
+
+        // Create the deployment.json content
+        string memory json = string(
+            abi.encodePacked(
+                    '{',
+                    '"governanceContract": "', vm.toString(governanceVotingAddress), '", ',
+                    '"stakingContract": "', vm.toString(address(stakingContract)), '", ',
+                    '"stakingToken": "', vm.toString(stakingTokenAddress), '"',
+                    '}'
+            )
+        );
+
+        // Write the deployment.json file
+        vm.writeFile("./deployment.json", json);
+        console2.log("deployment.json written successfully.");
 
         vm.stopBroadcast();
     }

@@ -26,7 +26,9 @@ contract GovernanceVoting is Ownable {
     event VoteRecorded(uint256 indexed proposalId, address indexed voter, bool voteYes, uint256 amount);
 
     // --- Constructor ---
-    constructor() {}
+    constructor() Ownable(msg.sender) {
+        // `Ownable` automatically sets `msg.sender` as the owner
+    }
 
     // --- Access Control ---
     /**

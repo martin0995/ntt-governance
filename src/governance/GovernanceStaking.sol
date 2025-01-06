@@ -41,7 +41,7 @@ contract StakingContract is Ownable {
     event LogUint(string message, uint256 value);
     event LogBool(string message, bool value);
 
-    constructor(address _stakingToken, address _governanceContract) {
+    constructor(address _stakingToken, address _governanceContract) Ownable(msg.sender) {
         require(_stakingToken != address(0), "Invalid staking token address");
         require(_governanceContract != address(0), "Invalid governance contract address");
         stakingToken = IERC20(_stakingToken);

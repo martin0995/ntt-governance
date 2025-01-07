@@ -47,6 +47,7 @@ Before proceeding, ensure you have the following:
    Post-deployment:
    
     - Add the staking contract address to the .env file as STAKING_CONTRACT_ADDRESS
+    - A `deployment.json` file will be created in the root directory containing all deployment details, including the governance contract, staking contract, and token contract addresses
 
 3. Update Governance Contract with Staking Address
 

@@ -7,12 +7,10 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 interface IGovernanceVoting {
     function recordVote(uint256 proposalId, bool voteYes, uint256 amount, address voter) external;
-    function getProposalDetails(uint256 proposalId) external view returns (
-        string memory description,
-        uint256 yesVotes,
-        uint256 noVotes,
-        bool isExpired
-    );
+    function getProposalDetails(uint256 proposalId)
+        external
+        view
+        returns (string memory description, uint256 yesVotes, uint256 noVotes, bool isExpired);
 }
 
 contract StakingContract is Ownable {
@@ -65,7 +63,7 @@ contract StakingContract is Ownable {
 
         // Ensure the proposal exists and is active
         emit LogUint("Checking proposal ID", proposalId);
-        (, , , bool isExpired) = governance.getProposalDetails(proposalId);
+        (,,, bool isExpired) = governance.getProposalDetails(proposalId);
         require(!isExpired, "Proposal has expired");
 
         // Prevent double voting
@@ -91,7 +89,7 @@ contract StakingContract is Ownable {
 
         // Check if the proposal has expired
         IGovernanceVoting governance = IGovernanceVoting(governanceContract);
-        (, , , bool isExpired) = governance.getProposalDetails(proposalId);
+        (,,, bool isExpired) = governance.getProposalDetails(proposalId);
         require(isExpired, "Proposal has not expired yet");
 
         // Retrieve the locked vote
@@ -106,7 +104,6 @@ contract StakingContract is Ownable {
 
         emit TokensWithdrawn(msg.sender, proposalId, amountToWithdraw);
     }
-
 
     // --- Helper Functions ---
     function getLockedTokens(address voter, uint256 proposalId) external view returns (uint256) {

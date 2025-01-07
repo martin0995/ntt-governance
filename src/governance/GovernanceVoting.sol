@@ -9,8 +9,8 @@ contract GovernanceVoting is Ownable {
 
     struct Proposal {
         string description; // A short description of the proposal
-        uint256 yesVotes;   // Total "Yes" votes
-        uint256 noVotes;    // Total "No" votes
+        uint256 yesVotes; // Total "Yes" votes
+        uint256 noVotes; // Total "No" votes
         uint256 expiryTimestamp; // Expiry time for the proposal
     }
 
@@ -47,20 +47,12 @@ contract GovernanceVoting is Ownable {
      * @param description The description of the proposal.
      * @param expiryTimestamp The expiration time for the proposal (in seconds since epoch).
      */
-    function addProposal(
-        uint256 proposalId,
-        string memory description,
-        uint256 expiryTimestamp
-    ) external onlyOwner {
+    function addProposal(uint256 proposalId, string memory description, uint256 expiryTimestamp) external onlyOwner {
         require(bytes(proposals[proposalId].description).length == 0, "Proposal already exists");
         require(block.timestamp < expiryTimestamp, "Expiry must be in the future");
 
-        proposals[proposalId] = Proposal({
-            description: description,
-            yesVotes: 0,
-            noVotes: 0,
-            expiryTimestamp: expiryTimestamp
-        });
+        proposals[proposalId] =
+            Proposal({description: description, yesVotes: 0, noVotes: 0, expiryTimestamp: expiryTimestamp});
 
         // Add the proposalId to the proposalIds array
         proposalIds.push(proposalId);
@@ -76,12 +68,7 @@ contract GovernanceVoting is Ownable {
      * @param amount The amount of tokens associated with the vote.
      * @param voter The address of the voter (passed by the Staking contract).
      */
-    function recordVote(
-        uint256 proposalId,
-        bool voteYes,
-        uint256 amount,
-        address voter
-    ) external {
+    function recordVote(uint256 proposalId, bool voteYes, uint256 amount, address voter) external {
         require(msg.sender == stakingContract, "Unauthorized caller");
 
         Proposal storage proposal = proposals[proposalId];
@@ -106,14 +93,8 @@ contract GovernanceVoting is Ownable {
         Proposal storage proposal = proposals[proposalId];
         require(bytes(proposal.description).length > 0, "Proposal does not exist");
 
-        return (
-            proposal.description,
-            proposal.yesVotes,
-            proposal.noVotes,
-            block.timestamp > proposal.expiryTimestamp
-        );
+        return (proposal.description, proposal.yesVotes, proposal.noVotes, block.timestamp > proposal.expiryTimestamp);
     }
-
 
     // Returns an array of all proposal IDs
     function getProposals() external view returns (uint256[] memory) {

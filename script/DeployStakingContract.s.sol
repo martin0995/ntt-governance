@@ -23,11 +23,17 @@ contract DeployStakingContract is Script {
         // Create the deployment.json content
         string memory json = string(
             abi.encodePacked(
-                    '{',
-                    '"governanceContract": "', vm.toString(governanceVotingAddress), '", ',
-                    '"stakingContract": "', vm.toString(address(stakingContract)), '", ',
-                    '"stakingToken": "', vm.toString(stakingTokenAddress), '"',
-                    '}'
+                "{",
+                '"governanceContract": "',
+                vm.toString(governanceVotingAddress),
+                '", ',
+                '"stakingContract": "',
+                vm.toString(address(stakingContract)),
+                '", ',
+                '"stakingToken": "',
+                vm.toString(stakingTokenAddress),
+                '"',
+                "}"
             )
         );
 

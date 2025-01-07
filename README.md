@@ -19,54 +19,54 @@ Before proceeding, ensure you have the following:
 
 1. Deploy Governance Contract
 
-Deploy the governance contract using the following command:
-
-```bash
-forge script script/DeployGovernanceVoting.s.sol \
-    --rpc-url https://ethereum-sepolia-rpc.publicnode.com \
-    --private-key <PRIVATE_KEY> \
-    --broadcast
-```
-
-Post-deployment:
-
- - Add the governance contract address to the `.env` file as GOVERNANCE_ADDRESS
- - Add the token contract address (ERC20) to the `.env` file as STAKING_TOKEN_ADDRESS
+   Deploy the governance contract using the following command:
+   
+   ```bash
+   forge script script/DeployGovernanceVoting.s.sol \
+       --rpc-url https://ethereum-sepolia-rpc.publicnode.com \
+       --private-key <PRIVATE_KEY> \
+       --broadcast
+   ```
+   
+   Post-deployment:
+   
+    - Add the governance contract address to the `.env` file as GOVERNANCE_CONTRACT_ADDRESS
+    - Add the token contract address (ERC20) to the `.env` file as TOKEN_ADDRESS
 
 2. Deploy Staking Contract
 
-Deploy the staking contract using the following command:
-
-```bash
-forge script script/DeployStakingContract.s.sol \
-    --rpc-url https://ethereum-sepolia-rpc.publicnode.com \
-    --private-key <PRIVATE_KEY> \
-    --broadcast
-```
-
-Post-deployment:
-
- - Add the staking contract address to the .env file as STAKING_CONTRACT_ADDRESS
+   Deploy the staking contract using the following command:
+   
+   ```bash
+   forge script script/DeployStakingContract.s.sol \
+       --rpc-url https://ethereum-sepolia-rpc.publicnode.com \
+       --private-key <PRIVATE_KEY> \
+       --broadcast
+   ```
+   
+   Post-deployment:
+   
+    - Add the staking contract address to the .env file as STAKING_CONTRACT_ADDRESS
 
 3. Update Governance Contract with Staking Address
 
-Link the staking contract to the governance contract:
-
-```bash
-forge script script/UpdateGovernanceWithStaking.s.sol \
-    --rpc-url https://ethereum-sepolia-rpc.publicnode.com \
-    --private-key <PRIVATE_KEY> \
-    --broadcast
-```
+   Link the staking contract to the governance contract:
+   
+   ```bash
+   forge script script/UpdateGovernanceWithStaking.s.sol \
+       --rpc-url https://ethereum-sepolia-rpc.publicnode.com \
+       --private-key <PRIVATE_KEY> \
+       --broadcast
+   ```
 
 ## Testing
 
 ### Create a Proposal
 
-Create a new proposal with a 5-minute expiry:
+Create a new proposal with a 5-minute expiry and proposal ID as 1:
 
 ```bash
-cast send $GOVERNANCE_ADDRESS \
+cast send <GOVERNANCE_CONTRACT_ADDRESS> \
     "addProposal(uint256,string,uint256)" \
     1 "Proposal to test voting" $(($(date +%s) + 300)) \
     --rpc-url https://ethereum-sepolia-rpc.publicnode.com \
@@ -79,29 +79,29 @@ Ensure the staking contract has permission to transfer tokens on behalf of the v
 
 1. Check the current allowance:
 
-```bash
-cast call $STAKING_TOKEN_ADDRESS \
-    "allowance(address,address)(uint256)" \
-    <VOTER_ADDRESS> $STAKING_CONTRACT_ADDRESS \
-    --rpc-url https://ethereum-sepolia-rpc.publicnode.com
-```
+   ```bash
+   cast call <TOKEN_ADDRESS> \
+       "allowance(address,address)(uint256)" \
+       <VOTER_ADDRESS> <STAKING_CONTRACT_ADDRESS> \
+       --rpc-url https://ethereum-sepolia-rpc.publicnode.com
+   ```
 
 2. If the result is 0, set the allowance:
 
-```bash
-cast send $STAKING_TOKEN_ADDRESS \
-    "approve(address,uint256)" \
-    $STAKING_CONTRACT_ADDRESS 10000 \
-    --rpc-url https://ethereum-sepolia-rpc.publicnode.com \
-    --private-key <VOTER_PRIVATE_KEY>
-```
+   ```bash
+   cast send <TOKEN_ADDRESS> \
+       "approve(address,uint256)" \
+       <STAKING_CONTRACT_ADDRESS> 10000 \
+       --rpc-url https://ethereum-sepolia-rpc.publicnode.com \
+       --private-key <PRIVATE_KEY>
+   ```
 
 ### Vote on the Proposal
 
 Cast your vote (e.g., voting "Yes" with 1 token):
 
 ```bash
-cast send $STAKING_CONTRACT_ADDRESS \
+cast send <STAKING_CONTRACT_ADDRESS> \
     "vote(uint256,bool,uint256)" \
     1 true 1000000000000000000 \
     --rpc-url https://ethereum-sepolia-rpc.publicnode.com \
@@ -113,7 +113,7 @@ cast send $STAKING_CONTRACT_ADDRESS \
 Check the details of a specific proposal:
 
 ```bash
-cast call $GOVERNANCE_ADDRESS \
+cast call <GOVERNANCE_CONTRACT_ADDRESS> \
     "getProposalDetails(uint256)" 1 \
     --rpc-url https://ethereum-sepolia-rpc.publicnode.com
 ```
@@ -127,7 +127,7 @@ cast --abi-decode "getProposalDetails()(string,uint256,uint256,uint256)" <ENCODE
 Retrieve all proposal IDs:
 
 ```bash
-cast call $GOVERNANCE_ADDRESS \
+cast call <GOVERNANCE_CONTRACT_ADDRESS \
     "getProposals()(uint256[])" \
     --rpc-url https://ethereum-sepolia-rpc.publicnode.com
 ```
@@ -137,7 +137,7 @@ cast call $GOVERNANCE_ADDRESS \
 Withdraw tokens locked during voting once the proposal expires:
 
 ```bash
-cast send $STAKING_CONTRACT_ADDRESS \
+cast send <STAKING_CONTRACT_ADDRESS> \
     "withdrawTokens(uint256)" \
     1 \
     --rpc-url https://ethereum-sepolia-rpc.publicnode.com \
